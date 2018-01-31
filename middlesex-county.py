@@ -1,5 +1,13 @@
 import pandas as pd
 import fuzzy
+import geocoder as gcode
+
+
+def get_latlang(street, town, postal_zip):
+    return gcode.google('{} {} {}'.format(street, town, postal_zip)).latlng
+
+def cal_score_latlang(street1, street2, town, postal_zip):
+    return int(get_latlang(street1, town, postal_zip)== get_latlang(street2, town, postal_zip))                        
 
 def calc_soundex(val):
     return fuzzy.Soundex(4)(val)
@@ -49,8 +57,13 @@ print(town_nm_df.shape) #535
 
 pisc_homes = pisc_df[['property_location', 'owner_name','street_address','city_state','zip_code']]
 pisc_homes.loc[:,'property_city_state'] = 'PISCATAWAY, NJ'
+#pisc_homes.loc[:,'property_latlng'] = pisc_homes.apply (lambda row: get_latlang(row['property_location'],'Piscataway', '08854'), axis=1)
+#pisc_homes.loc[:,'owner_latlng'] = pisc_homes.apply (lambda row: get_latlang(row['street_address'],'Piscataway', '08854'), axis=1)
 pisc_homes.loc[:,'score_city_state'] = pisc_homes.apply (lambda row: calc_score(row['city_state'],row['property_city_state']), axis=1)
 pisc_homes.loc[:,'score_street'] = pisc_homes.apply (lambda row: calc_score(row['property_location'],row['street_address']), axis=1)
+#pisc_homes.loc[:,'score_latlng'] = pisc_homes.apply (lambda row: cal_score_latlang(row['property_location'],row['street_address'],'Piscataway', '08854'), axis=1)
+pisc_homes.loc[:,'score_latlng'] = pisc_homes.apply (lambda row: cal_score_latlang(row['property_location'],row['street_address'],'Piscataway', '08854'), axis=1)
+
 print('pisc_homes.shape:{}'.format(pisc_homes.shape))
 #print(pisc_homes.head(2))
 #print(pisc_homes)
@@ -79,9 +92,12 @@ edison_homes = edison_df[['property_location', 'owner_name','street_address','ci
 #edison_homes.loc[:,'property_city_state'] = 'EDISON, NJ'
 #edison_homes.loc[:,'property_street#'] = edison_homes.apply(lambda row: get_street_nbr(row['property_location']), axis=1)
 #edison_homes.loc[:,'property_street_nm'] = edison_homes.apply(lambda row: get_street_nm(row['property_location']), axis=1)
+edison_homes.loc[:,'property_latlng'] = edison_homes.apply (lambda row: get_latlang(row['property_location'],'Edison', '08817'), axis=1)
+edison_homes.loc[:,'owner_latlng'] = edison_homes.apply (lambda row: get_latlang(row['street_address'],'Edison', '08817'), axis=1)
 edison_homes.loc[:,'score_city_state'] = edison_homes.apply (lambda row: calc_score(row['city_state'],'EDISON, NJ'), axis=1)
 edison_homes.loc[:,'score_street'] = edison_homes.apply (lambda row: calc_score(row['property_location'],row['street_address']), axis=1)
 edison_homes.loc[:,'score_street_nm'] = edison_homes.apply (lambda row: calc_score(get_street_nm(row['property_location']),get_street_nm(row['street_address'])), axis=1)
+edison_homes.loc[:,'score_latlng'] = edison_homes.apply (lambda row: cal_score_latlang(row['property_location'],row['street_address'],'Edison', '08817'), axis=1)
 print('edison_homes.shape:{}'.format(edison_homes.shape)) #25436
 #print(edison_homes.head(2))
 #print(edison_homes)
@@ -93,3 +109,4 @@ print('edison_rental.shape:{}'.format(edison_rental.shape))
 
 edison_owner.to_csv(r'C:\Maru\sw\edison_owner.csv', sep='|', na_rep='', header=True, index=False)
 edison_rental.to_csv(r'C:\Maru\sw\edison_rental.csv', sep='|', na_rep='', header=True, index=False)
+
